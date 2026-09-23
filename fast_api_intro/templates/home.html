@@ -1,12 +1,5 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FastAPI sensors readings</title>
-  </head>
-  <body>
-    <h1>Home Page</h1>
-    <p>This uses templates</p>
-  </body>
-</html>
+{% extends "layout.html"%} {%block content%} {% for sensor_reading in
+sensor_readings%}
+<h2>{{sensor_reading.sensor}}</h2>
+<h2>{{sensor_reading.content}}</h2>
+{% endfor%} {%endblock content%}

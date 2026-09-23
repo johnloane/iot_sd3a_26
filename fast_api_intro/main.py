@@ -23,7 +23,7 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", include_in_schema=False)
 @app.get("/temp_sensor_readings", include_in_schema=False)
 def home(request: Request):
-    return templates.TemplateResponse(request, "home.html")
+    return templates.TemplateResponse(request, "home.html", {"sensor_readings":sensor_readings, "title":"IoT sensor readings"})
 
 
 @app.get("/api/sensor_readings")
