@@ -35,16 +35,17 @@ def get_sensor_readings():
 
 
 @app.get("/api/readings/{reading_id}")
-def get_reading(request, reading_id: int):
+def get_reading(reading_id: int):
     for reading in sensor_readings:
         if reading.get("id") == reading_id:
-            return templates.TemplateResponse(request, "reading.html", {"reading":reading, "title":"IoT sensor readings"})
+            return reading
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Sensor reading not found")
 
 
 @app.get("/readings/{reading_id}")
-def reading_page(reading_id: int):
+def reading_page(request: Request, reading_id: int):
     for reading in sensor_readings:
         if reading.get("id") == reading_id:
-            return reading
+            title = reading["sensor"][:50]
+            return templates.TemplateResponse(request, "reading.html", {"reading":reading, "title": title})
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Sensor reading not found")
