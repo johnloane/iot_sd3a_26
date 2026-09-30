@@ -1,9 +1,17 @@
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from schemas import ReadingCreate, ReadingResponse, UserCreate, UserResponse
+from typing import Annotated
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+import models
+from database import Base, engine, get_db
+
+
 
 
 sensor_readings: list[dict] = [
@@ -21,38 +29,56 @@ sensor_readings: list[dict] = [
     }
 ]
 
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/media", StaticFiles(directory="media"), name = "media")
 
 @app.get("/", include_in_schema=False, name="home")
 @app.get("/temp_sensor_readings", include_in_schema=False, name = "temp_sensor_readings")
-def home(request: Request):
-    return templates.TemplateResponse(request, "home.html", {"sensor_readings":sensor_readings, "title":"IoT sensor readings"})
+def home(request: Request, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Reading))
+    readings = result.scalars().all()
+    return templates.TemplateResponse(request, "home.html", {"sensor_readings":readings, "title":"IoT sensor readings"})
 
 
 @app.get("/readings/{reading_id}", include_in_schema=False)
-def reading_page(request: Request, reading_id: int):
-    for reading in sensor_readings:
-        if reading.get("id") == reading_id:
-            title = reading["sensor"][:50]
-            return templates.TemplateResponse(request, "reading.html", {"reading":reading, "title": title})
+def reading_page(request: Request, reading_id: int, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Reading).where(models.Reading.id == reading_id))
+    reading = result.scalars().first()
+    if reading:
+        title = reading.name[:50]
+        return templates.TemplateResponse(request, "reading.html",{"reading":reading, "title":title})
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Sensor reading not found")
 
 
-@app.get("/api/sensor_readings")
+@app.get("/api/sensor_readings", response_model=list[ReadingResponse])
 def get_sensor_readings():
     return sensor_readings
 
 
-@app.get("/api/readings/{reading_id}")
+@app.get("/api/readings/{reading_id}", response_model=ReadingResponse)
 def get_reading(reading_id: int):
     for reading in sensor_readings:
         if reading.get("id") == reading_id:
             return reading
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Sensor reading not found")
+
+@app.post("/api/readings", response_model=ReadingResponse, status_code=status.HTTP_201_CREATED)
+def create_reading(reading: ReadingCreate):
+    new_id = max(r["id"] for r in sensor_readings) + 1 if sensor_readings else 1
+    new_reading = {
+        "id" : new_id,
+        "sensor": reading.sensor,
+        "content": reading.content,
+        "date_timestamp_posted": "Sept 30, 2026, 14:22"
+    }
+    sensor_readings.append(new_reading)
+    return new_reading
 
 
 
