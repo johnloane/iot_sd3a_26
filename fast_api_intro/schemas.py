@@ -30,6 +30,7 @@ class ReadingResponse(ReadingBase):
     id: int
     user_id: int
     date_timestamp_posted: datetime
+    author: UserResponse
     
     
     

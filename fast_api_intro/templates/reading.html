@@ -3,8 +3,8 @@
   <div class="d-flex align-items-start gap-4">
     <img
       class="rounded-circle article-img flex-shrink-0"
-      src="{{ url_for('static', path='profile_pics/default.jpg') }}"
-      alt="{{ reading.sensor }}'s profile picture"
+      src="{{ url_for(reading.author.image_path}}"
+      alt="{{ reading.author.username }}'s profile picture"
       width="64"
       height="64"
       loading="lazy"
@@ -12,7 +12,9 @@
     <div class="flex-grow-1">
       <div class="article-metadata mb-2">
         <a class="me-2" href="#">{{ reading.sensor }}</a>
-        <small class="text-body-secondary">{{ reading.date_timestamp }}</small>
+        <small class="text-body-secondary"
+          >{{ reading.date_posted.strftime("%d %b,B, %Y") }}</small
+        >
       </div>
       <h2 class="article-title">{{ reading.sensor }}</h2>
       <p class="article-content">{{ reading.content }}</p>

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import UTC, datetime
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -11,7 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     image_file: Mapped[str|None]= mapped_column(String(200), nullable=True, default=None)
     
-    readings: Mapped[list[Reading]] = relationship(back_populates="user_id")
+    readings: Mapped[list[Reading]] = relationship(back_populates="author")
     
     @property
     def image_path(self) -> str:
@@ -19,20 +19,20 @@ class User(Base):
             return f"/media/profile_pics/{self.image_file}"
         return "/static/profile_pics/default.jpg"
     
-    class Reading(Base):
-        __tablename__ = "reading"
-        
-        id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-        name: Mapped[str] = mapped_column(String(20), nullable=False)
-        value: Mapped[float] = mapped_column(float, nullable=False)
-        user_id: Mapped[int] = mapped_column(
-            ForeignKey("user.id"),
-            nullable=False,
-            index=True
-        )
-        datetimestamp: Mapped[datetime] = mapped_column(
-            DateTime(timezone=True),
-            default = lambda: datetime.now(UTC),
-        )
-        
-        user_id: Mapped[User] = relationship(back_populates="user") 
+class Reading(Base):
+    __tablename__ = "reading"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id"),
+        nullable=False,
+        index=True
+    )
+    datetimestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default = lambda: datetime.now(UTC),
+    )
+    
+    author: Mapped[User] = relationship(back_populates="readings") 
